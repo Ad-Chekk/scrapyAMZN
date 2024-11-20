@@ -50,9 +50,10 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    "scrapy_lib.middlewares.ScrapyLibDownloaderMiddleware": 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+   "scrapy_lib.middlewares.ScrapyLibDownloaderMiddleware": 543,
+    "scrapy_lib.middlewares.CustomStatsMiddleware": 543,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -62,9 +63,10 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    "scrapy_lib.pipelines.ScrapyLibPipeline": 300,
-#}
+ITEM_PIPELINES = {
+  # "scrapy_lib.pipelines.ScrapyLibPipeline": 300,
+   "scrapy_lib.pipelines.CsvExportPipeline": 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
@@ -91,6 +93,7 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
+    'scrapy_lib.middlewares.CustomStatsMiddleware': 543,
 }
 
 # Set settings whose default value is deprecated to a future-proof value
@@ -103,3 +106,7 @@ AUTOTHROTTLE_ENABLED = True
 AUTOTHROTTLE_START_DELAY = 5  # Initial download delay
 AUTOTHROTTLE_MAX_DELAY = 60   # Maximum download delay in case of high latencies
 DOWNLOAD_DELAY = 3 
+FEED_FORMAT = 'csv'
+FEED_URI = 'C:\scrapy_lib\data\scrapy_data.csv'
+
+

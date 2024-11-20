@@ -1,22 +1,9 @@
 import scrapy
+import csv
+from datetime import datetime
 
-class ExampleSpider(scrapy.Spider):
-    name = 'example'
-    # Replace with the URL of the website you want to scrape
-    start_urls = ['https://example.com']
-
-    def parse(self, response):
-        # Example: Extract all the <h1> elements
-        for heading in response.xpath('//h1'):
-            yield {
-                'heading': heading.xpath('text()').get(),
-            }
-        
-        # Follow links to other pages, if any (Optional)
-        for next_page in response.css('a::attr(href)'):
-            next_page = response.urljoin(next_page.get())
-            yield scrapy.Request(next_page, callback=self.parse)
-
+import scrapy
+import csv
 
 class QuotesSpider(scrapy.Spider):
     name = "quotes"
@@ -36,8 +23,6 @@ class QuotesSpider(scrapy.Spider):
         next_page = response.css('li.next a::attr(href)').get()
         if next_page is not None:
             yield response.follow(next_page, self.parse)
-
-
 
 
 
@@ -76,5 +61,161 @@ class AmazonSpider(scrapy.Spider):
 
         # Handle pagination
         next_page = response.css('ul.a-pagination li.a-last a::attr(href)').get()
+        if next_page:
+            yield response.follow(next_page, self.parse)
+
+################################NETWORKING DATA EXTRACTION FROM HERE R#############
+
+class NetworkingSpider1(scrapy.Spider):
+    name = "networking_spider"
+    start_urls = ['http://quotes.toscrape.com']
+
+    custom_settings = {
+        'FEEDS': {
+            'C:\\scrapy_lib\\data\\scrapy_data.csv': {
+                'format': 'csv',
+                'fields': ['URL', 'Status Code', 'Response Time (s)', 'Depth'],
+            },
+        }
+    }
+
+    def __init__(self):
+        # Create/overwrite CSV file and write headers
+        with open('C:\\scrapy_lib\\data\\scrapy_data.csv', mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(['URL', 'Status Code', 'Response Time (s)', 'Depth'])
+
+    def parse(self, response):
+        # Networking data
+        url = response.url
+        status_code = response.status
+        response_time = response.meta.get('download_latency', 'N/A')  # Time taken to get the response
+        depth = response.meta.get('depth', 0)  # Depth of the request
+
+        # Write networking data (without any scraped content) to the CSV
+        with open('C:\\scrapy_lib\\data\\scrapy_data.csv', mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow([url, status_code, response_time, depth])
+
+        # Follow pagination links or further URLs if needed
+        next_page = response.css('li.next a::attr(href)').get()
+        if next_page:
+            yield response.follow(next_page, self.parse)
+
+##############################################################
+##complete data spider begins here olahuuber
+###############################################################
+
+
+class NetworkingSpider2(scrapy.Spider):
+    name = "complete_net"
+    start_urls = ['http://quotes.toscrape.com']
+
+    custom_settings = {
+        'FEEDS': {
+            'C://EchoSift//data//net_data.csv': {
+                'format': 'csv',
+                'fields': ['URL', 'Status Code', 'Response Time (s)', 'Depth', 'IP Address', 'Request Headers', 'Response Headers', 'Content Length', 'User Agent', 'Redirected URLs', 'Encoding', 'Cookies'],
+            },
+        }
+    }
+
+    def __init__(self):
+        # Create/overwrite CSV file and write headers
+        with open('C://EchoSift//data//net_data.csv', mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(['URL', 'Status Code', 'Response Time (s)', 'Depth', 'IP Address', 'Request Headers', 'Response Headers', 'Content Length', 'User Agent', 'Redirected URLs', 'Encoding', 'Cookies'])
+
+    def parse(self, response):
+        # Networking data
+        url = response.url
+        status_code = response.status
+        response_time = response.meta.get('download_latency', 'N/A')  # Time taken to get the response
+        depth = response.meta.get('depth', 0)  # Depth of the request
+        ip_address = response.ip_address  # IP address of the server
+        request_headers = response.request.headers.to_unicode_dict()  # Request headers
+        response_headers = response.headers.to_unicode_dict()  # Response headers
+        content_length = len(response.body)  # Content length of the response
+        user_agent = response.request.headers.get('User-Agent', 'N/A').decode('utf-8')  # User-Agent
+        redirected_urls = response.meta.get('redirect_urls', [])  # Any redirected URLs
+        encoding = response.encoding if response.encoding else 'N/A'  # Response encoding
+        cookies = response.headers.getlist('Set-Cookie')  # Cookies set by the server
+
+        # Extract the actual data here (modify this part as per your scraping logic)
+        #data_extracted = response.xpath('//span[@class="text"]/text()').getall()
+
+        # Write networking data and extracted content to the CSV
+        with open('C://EchoSift//data//net_data.csv', mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow([url, status_code, response_time, depth, ip_address, request_headers, response_headers, content_length, user_agent, ', '.join(redirected_urls), encoding, cookies])
+
+        # Follow pagination links or further URLs if needed
+        next_page = response.css('li.next a::attr(href)').get()
+        if next_page:
+            yield response.follow(next_page, self.parse)
+
+import scrapy
+import csv
+######################################################################################################
+#####ha code below will append the new data on the csv file net data 
+###################################################################################################
+class NetworkingSpider3(scrapy.Spider):
+    name = "complete"
+    
+    # Default starting URL
+    default_url = 'https://www.dmce.ac.in/'  # You can keep this as a default URL if you want
+
+    custom_settings = {
+        'FEEDS': {
+            'C://EchoSift//data//net_data.csv': {
+                'format': 'csv',
+                'fields': ['URL', 'Status Code', 'Response Time (s)', 'Depth', 'IP Address', 'Request Headers', 'Response Headers', 'Content Length', 'User Agent', 'Redirected URLs', 'Encoding', 'Cookies'],
+            },
+        }
+    }
+
+    def __init__(self, url=None, *args, **kwargs):
+        """
+        Initialize the spider with a starting URL.
+        
+        :param url: The URL to scrape, passed as a parameter.
+        """
+        super().__init__(*args, **kwargs)
+        
+        # Set the start URL based on the provided URL or use the default
+        self.start_urls = [url] if url else [self.default_url]
+
+        # Check if the CSV file exists, if not, create it and write headers
+        try:
+            with open('C://EchoSift//data//net_data.csv', mode='r', encoding='utf-8') as file:
+                pass  # File exists, do nothing
+        except FileNotFoundError:
+            # If file does not exist, create it and write headers
+            with open('C://EchoSift//data//net_data.csv', mode='w', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+                writer.writerow(['URL', 'Status Code', 'Response Time (s)', 'Depth', 'IP Address', 'Request Headers', 'Response Headers', 'Content Length', 'User Agent', 'Redirected URLs', 'Encoding', 'Cookies'])
+
+    def parse(self, response):
+        # Networking data
+        url = response.url
+        status_code = response.status
+        response_time = response.meta.get('download_latency', 'N/A')  # Time taken to get the response
+        depth = response.meta.get('depth', 0)  # Depth of the request
+        ip_address = response.ip_address  # IP address of the server
+        request_headers = response.request.headers.to_unicode_dict()  # Request headers
+        response_headers = response.headers.to_unicode_dict()  # Response headers
+        content_length = len(response.body)  # Content length of the response
+        user_agent = response.request.headers.get('User-Agent', 'N/A').decode('utf-8')  # User-Agent
+        redirected_urls = response.meta.get('redirect_urls', [])  # Any redirected URLs
+        encoding = response.encoding if response.encoding else 'N/A'  # Response encoding
+        cookies = response.headers.getlist('Set-Cookie')  # Cookies set by the server
+
+        # Write networking data and extracted content to the CSV (appending new rows)
+        with open('C://EchoSift//data//net_data.csv', mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow([url, status_code, response_time, depth, ip_address, request_headers, response_headers, content_length, user_agent, ', '.join(redirected_urls), encoding, cookies])
+
+        # Follow pagination links or further URLs if needed
+        next_page = response.css('li.next a::attr(href)').get()
         if next_page:
             yield response.follow(next_page, self.parse)

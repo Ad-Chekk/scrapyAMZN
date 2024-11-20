@@ -101,3 +101,33 @@ class ScrapyLibDownloaderMiddleware:
 
     def spider_opened(self, spider):
         spider.logger.info("Spider opened: %s" % spider.name)
+
+import time
+from scrapy import signals
+
+class CustomStatsMiddleware:
+    def __init__(self):
+        self.start_times = {}
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        middleware = cls()
+        crawler.signals.connect(middleware.spider_opened, signal=signals.spider_opened)
+        return middleware
+
+    def spider_opened(self, spider):
+        spider.crawler.stats.set_value('custom_data', [])
+
+    def process_request(self, request, spider):
+        self.start_times[request.url] = time.time()
+
+    def process_response(self, request, response, spider):
+        duration = time.time() - self.start_times.get(request.url, time.time())
+        stats = {
+            'url': request.url,
+            'status_code': response.status,
+            'response_time': duration,
+            'depth': request.meta.get('depth', 0),
+        }
+        spider.crawler.stats.get_value('custom_data').append(stats)
+        return response
